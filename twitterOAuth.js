@@ -82,7 +82,7 @@ router.get("/auth/twitter/callback", (req, res) => {
                );
 });
 
-app.get("/health",(req,res)=>{
+router.get("/health",(req,res)=>{
   res.send("healthy server")
 }) 
 
