@@ -37,49 +37,54 @@ router.get("/auth/twitter", (req, res) => {
 
 // Step 2: Twitter redirects back to your app
 router.get("/auth/twitter/callback", (req, res) => {
-               const { oauth_token, oauth_verifier } = req.query;
-               const tokenSecret = requestTokens[oauth_token];
+  const { oauth_token, oauth_verifier } = req.query;
+  const tokenSecret = requestTokens[oauth_token];
 
-               oauth.getOAuthAccessToken(
-                              oauth_token,
-                              tokenSecret,
-                              oauth_verifier,
-                              (err, accessToken, accessTokenSecret) => {
-                                             if (err) return res.status(500).send("Access Token Error");
+  oauth.getOAuthAccessToken(
+    oauth_token,
+    tokenSecret,
+    oauth_verifier,
+    (err, accessToken, accessTokenSecret) => {
+      if (err) return res.status(500).send("Access Token Error");
 
-                                             // Optional: fetch user profile info
-                                             oauth.get(
-                                                            "https://api.twitter.com/1.1/account/verify_credentials.json",
-                                                            accessToken,
-                                                            accessTokenSecret,
-                                                            (err, data) => {
-                                                                           if (err) return res.status(500).send("Failed to get user info");
+      // Optional: fetch user profile info
+      oauth.get(
+        "https://api.twitter.com/1.1/account/verify_credentials.json",
+        accessToken,
+        accessTokenSecret,
+        (err, data) => {
+          if (err) return res.status(500).send("Failed to get user info");
 
-                                                                           const userInfo = JSON.parse(data);
+          const userInfo = JSON.parse(data);
 
-                                                                           // Example final data to return
-                                                                           const result = {
-                                                                                          accessToken,
-                                                                                          accessTokenSecret,
-                                                                                          twitterUsername: userInfo.screen_name,
-                                                                                          twitterId: userInfo.id_str,
-                                                                                          profileImage: userInfo.profile_image_url_https,
-                                                                           };
-                                                                           console.log({
-                                                                                          accessToken,
-                                                                                          accessTokenSecret,
-                                                                                          twitterUsername: userInfo.screen_name,
-                                                                                          twitterId: userInfo.id_str,
-                                                                                          profileImage: userInfo.profile_image_url_https,
-                                                                                        });
-                                                                                        
+          const result = {
+            accessToken,
+            accessTokenSecret,
+            twitterUsername: userInfo.screen_name,
+            twitterId: userInfo.id_str,
+            profileImage: userInfo.profile_image_url_https,
+          };
 
-                                                                           // In practice, redirect back to frontend with this info
-                                                                           res.json(result);
-                                                            }
-                                             );
-                              }
-               );
+          console.log(result);
+
+          // ✅ Send token data to the opener window (React app)
+          res.send(`
+            <html>
+              <body>
+                <script>
+                  window.opener.postMessage({
+                    access_token: "${accessToken}",
+                    access_secret: "${accessTokenSecret}"
+                  }, "*");
+                  window.close();
+                </script>
+              </body>
+            </html>
+          `);
+        }
+      );
+    }
+  );
 });
 
 router.get("/health",(req,res)=>{
