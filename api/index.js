@@ -1,5 +1,5 @@
 import express from "express";
-import twitterOAuth from "./twitterOAuth.js";
+import twitterOAuth from "../twitterOAuth.js";
 
 const app = express();
 
@@ -15,12 +15,4 @@ app.get("/", (req, res) => {
   res.json({ message: "Twitter OAuth Backend is running" });
 });
 
-// For local development
-if (process.env.NODE_ENV !== "production") {
-  app.listen(3001, () => {
-    console.log("Server running on http://localhost:3001");
-  });
-}
-
-// Export for Vercel
-export default app;
+export default app; 
